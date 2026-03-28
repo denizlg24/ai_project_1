@@ -136,7 +136,15 @@ class MainWindow(QMainWindow):
     def _on_finished(self, score: float) -> None:
         self._config_panel.set_running(False)
         self._status_bar.showMessage(f"Finished. Best score: {score:,.2f}")
+        if self._problem:
+            algo_name = self._algorithm.name().replace(" ", "_")
+            output_path = f"../output/output_{algo_name}_{int(score)}.csv"
 
+            try:
+                self._problem.to_submission(output_path)
+                self._status_bar.showMessage(f"Saved to {output_path}")
+            except Exception as e:
+                QMessageBox.warning(self, "Save Error", f"Could not save file: {str(e)}")
         self._cleanup_thread()
 
     def _on_error(self, message: str) -> None:

@@ -1,5 +1,6 @@
 from .base import Algorithm, AlgorithmState, ProgressData, ParameterDef
 from .simulated_annealing import SimulatedAnnealing
+from .genetic import GeneticAlgorithm
 
 __all__ = [
     "Algorithm",
@@ -7,4 +8,5 @@ __all__ = [
     "ProgressData",
     "ParameterDef",
     "SimulatedAnnealing",
+    "GeneticAlgorithm"
 ]

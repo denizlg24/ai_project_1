@@ -5,11 +5,12 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal
 
-from algorithms import Algorithm, ParameterDef, SimulatedAnnealing
+from algorithms import Algorithm, ParameterDef, SimulatedAnnealing, GeneticAlgorithm
 
 
 ALGORITHM_REGISTRY: list[type[Algorithm]] = [
     SimulatedAnnealing,
+    GeneticAlgorithm
 ]
 
 
