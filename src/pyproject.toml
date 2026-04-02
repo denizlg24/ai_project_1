@@ -1,10 +1,15 @@
 [project]
 name = "src"
 version = "0.1.0"
-description = "Add your description here"
+description = "Santa's Workshop optimization algorithms"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=2.4.3",
     "pandas>=3.0.1",
+    "PyQt6>=6.6.0",
+    "pyqtgraph>=0.13.0",
 ]
+
+[project.scripts]
+app = "app:main"
