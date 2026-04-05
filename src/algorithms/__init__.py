@@ -2,6 +2,7 @@ from .base import Algorithm, AlgorithmState, ProgressData, ParameterDef
 from .simulated_annealing import SimulatedAnnealing
 from .genetic import GeneticAlgorithm
 from .vns import VariableNeighbourhoodSearch
+from .ilp import ILPSolver
 
 __all__ = [
     "Algorithm",
@@ -11,4 +12,5 @@ __all__ = [
     "SimulatedAnnealing",
     "GeneticAlgorithm",
     "VariableNeighbourhoodSearch",
+    "ILPSolver",
 ]

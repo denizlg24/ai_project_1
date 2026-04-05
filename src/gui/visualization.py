@@ -151,7 +151,11 @@ class StatsPanel(QWidget):
             config = METRIC_CONFIG.get(metric_name, {})
             display_name = str(config.get("title", metric_name))
             self._label_names["extra_metric"].setText(f"{display_name}:")
-            self._labels["extra_metric"].setText(f"{data.extra[metric_name]:,.4f}")
+            value = data.extra[metric_name]
+            if isinstance(value, (int, float)):
+                self._labels["extra_metric"].setText(f"{value:,.4f}")
+            else:
+                self._labels["extra_metric"].setText(str(value))
         else:
             self._label_names["extra_metric"].setText("Extra:")
             self._labels["extra_metric"].setText("-")
@@ -201,8 +205,12 @@ class VisualizationPanel(QWidget):
 
         if data.extra:
             metric_name = next(iter(data.extra))
-            self._extra_chart.configure_metric(metric_name)
-            self._extra_chart.add_point(data.iteration, data.extra[metric_name])
+            value = data.extra[metric_name]
+            if isinstance(value, (int, float)):
+                self._extra_chart.configure_metric(metric_name)
+                self._extra_chart.add_point(data.iteration, value)
+            else:
+                self._extra_chart.hide()
 
         self._stats_panel.update_stats(data, self._initial_score)
 

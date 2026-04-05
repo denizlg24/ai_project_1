@@ -5,13 +5,14 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal
 
-from algorithms import Algorithm, ParameterDef, SimulatedAnnealing, GeneticAlgorithm, VariableNeighbourhoodSearch
+from algorithms import Algorithm, ParameterDef, SimulatedAnnealing, GeneticAlgorithm, VariableNeighbourhoodSearch, ILPSolver
 
 
 ALGORITHM_REGISTRY: list[type[Algorithm]] = [
     SimulatedAnnealing,
     GeneticAlgorithm,
     VariableNeighbourhoodSearch,
+    ILPSolver,
 ]
 
 
