@@ -91,6 +91,7 @@ class SimulatedAnnealing(Algorithm):
         self.state = AlgorithmState.RUNNING
         self._stop_requested = False
         self._pause_requested = False
+        self._start_timer()
 
         self.t_initial = self._calibrate_temperature()
         self.alpha = 0.01 ** (1.0 / self.max_iterations)
@@ -103,13 +104,13 @@ class SimulatedAnnealing(Algorithm):
         report_interval = max(1, self.max_iterations // 1000)
 
         for iteration in range(self.max_iterations):
-            if self._stop_requested:
+            if self._should_stop():
                 self.state = AlgorithmState.STOPPED
                 break
 
             while self._pause_requested:
                 self.state = AlgorithmState.PAUSED
-                if self._stop_requested:
+                if self._should_stop():
                     break
 
             if self.state == AlgorithmState.PAUSED:
@@ -143,6 +144,7 @@ class SimulatedAnnealing(Algorithm):
                     iteration=iteration,
                     current_score=current_score,
                     best_score=best_score,
+                    elapsed_seconds=self._elapsed(),
                     extra={"temperature": t},
                 ))
 
@@ -156,6 +158,7 @@ class SimulatedAnnealing(Algorithm):
                 iteration=self.max_iterations,
                 current_score=best_score,
                 best_score=best_score,
+                elapsed_seconds=self._elapsed(),
                 extra={"temperature": t},
             ))
 

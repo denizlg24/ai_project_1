@@ -5,12 +5,13 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal
 
-from algorithms import Algorithm, ParameterDef, SimulatedAnnealing, GeneticAlgorithm
+from algorithms import Algorithm, ParameterDef, SimulatedAnnealing, GeneticAlgorithm, VariableNeighbourhoodSearch
 
 
 ALGORITHM_REGISTRY: list[type[Algorithm]] = [
     SimulatedAnnealing,
-    GeneticAlgorithm
+    GeneticAlgorithm,
+    VariableNeighbourhoodSearch,
 ]
 
 
@@ -55,6 +56,17 @@ class ConfigPanel(QWidget):
         file_layout.addRow("Initial Solution:", submission_row)
 
         layout.addWidget(file_group)
+
+        time_group = QGroupBox("Runtime Limit")
+        time_layout = QFormLayout(time_group)
+        self._time_limit_spin = QSpinBox()
+        self._time_limit_spin.setRange(0, 36_000)
+        self._time_limit_spin.setValue(0)
+        self._time_limit_spin.setSingleStep(10)
+        self._time_limit_spin.setSuffix(" s")
+        self._time_limit_spin.setSpecialValueText("No limit")
+        time_layout.addRow("Max Runtime:", self._time_limit_spin)
+        layout.addWidget(time_group)
 
         algo_group = QGroupBox("Algorithm")
         algo_layout = QVBoxLayout(algo_group)
@@ -179,9 +191,13 @@ class ConfigPanel(QWidget):
             return None
         return text
 
+    def get_time_limit(self) -> float:
+        return float(self._time_limit_spin.value())
+
     def set_running(self, running: bool) -> None:
         self._run_btn.setEnabled(not running)
         self._stop_btn.setEnabled(running)
         self._algo_combo.setEnabled(not running)
+        self._time_limit_spin.setEnabled(not running)
         for widget in self._param_widgets.values():
             widget.setEnabled(not running)

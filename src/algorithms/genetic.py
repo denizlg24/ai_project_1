@@ -56,40 +56,45 @@ class GeneticAlgorithm(Algorithm):
 
     def run(self, progress_callback: Callable[[ProgressData], None] | None = None) -> float:
         self.state = AlgorithmState.RUNNING
-        
+        self._stop_requested = False
+        self._pause_requested = False
+        self._start_timer()
+
         population = []
         for _ in range(self.population_size):
             p = self.problem.copy()
-            self._mutate(p) 
+            self._mutate(p)
             population.append(p)
 
         best_overall = self.problem.copy()
         best_score = best_overall.total_score()
 
         for gen in range(self.max_generations):
-            if self._stop_requested: break
+            if self._should_stop():
+                self.state = AlgorithmState.STOPPED
+                break
 
             scores = np.array([p.total_score() for p in population])
 
             shift_scores = scores - np.min(scores)
-            exp_scores = np.exp(-shift_scores) 
+            exp_scores = np.exp(-shift_scores)
             fitness_probs = exp_scores / np.sum(exp_scores)
-            
+
             new_population = []
             sorted_indices = np.argsort(scores)
             new_population.append(population[sorted_indices[0]].copy())
             new_population.append(population[sorted_indices[1]].copy())
-            
+
             for _ in range(2,self.population_size):
                 parent1, parent2 = random.choices(population, weights=fitness_probs, k=2)
-            
+
                 child = self._reproduce(parent1, parent2)
-            
+
                 if random.random() < self.mutation_rate:
                     child = self._mutate(child)
-            
+
                 new_population.append(child)
-            
+
             population = new_population
 
             min_s = np.min(scores)
@@ -98,12 +103,16 @@ class GeneticAlgorithm(Algorithm):
                 best_overall = population[np.argmin(scores)].copy()
 
             if progress_callback:
+                diversity = float(np.std(scores))
                 progress_callback(ProgressData(
                     iteration=gen,
                     current_score=float(min_s),
-                    best_score=float(best_score)
+                    best_score=float(best_score),
+                    elapsed_seconds=self._elapsed(),
+                    extra={"population_diversity": diversity},
                 ))
 
         self.problem.restore_from(best_overall)
-        self.state = AlgorithmState.FINISHED
+        if self.state != AlgorithmState.STOPPED:
+            self.state = AlgorithmState.FINISHED
         return best_score

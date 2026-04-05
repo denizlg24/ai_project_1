@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -30,6 +31,7 @@ class ProgressData:
     iteration: int
     current_score: float
     best_score: float
+    elapsed_seconds: float = 0.0
     extra: dict[str, float] = field(default_factory=dict)
 
 
@@ -39,6 +41,19 @@ class Algorithm(ABC):
         self.state = AlgorithmState.IDLE
         self._stop_requested = False
         self._pause_requested = False
+        self.max_time_seconds: float = 0
+
+    def _start_timer(self) -> None:
+        self._start_time = time.monotonic()
+
+    def _elapsed(self) -> float:
+        return time.monotonic() - self._start_time
+
+    def _time_exceeded(self) -> bool:
+        return self.max_time_seconds > 0 and self._elapsed() > self.max_time_seconds
+
+    def _should_stop(self) -> bool:
+        return self._stop_requested or self._time_exceeded()
 
     @classmethod
     @abstractmethod

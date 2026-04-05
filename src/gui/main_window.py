@@ -106,6 +106,7 @@ class MainWindow(QMainWindow):
         self._viz_panel.set_initial_score(initial_score)
 
         self._algorithm = algo_cls(self._problem)
+        self._algorithm.max_time_seconds = self._config_panel.get_time_limit()
         params = self._config_panel.get_parameters()
         self._algorithm.configure(**params)
 

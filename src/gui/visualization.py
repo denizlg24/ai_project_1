@@ -40,30 +40,68 @@ class ScoreChart(pg.PlotWidget):
         self._best_curve.setData([], [])
 
 
-class TemperatureChart(pg.PlotWidget):
+METRIC_CONFIG: dict[str, dict[str, str | bool]] = {
+    "temperature": {
+        "title": "Temperature",
+        "label": "Temperature",
+        "color": "r",
+        "log_scale": True,
+    },
+    "population_diversity": {
+        "title": "Population Diversity",
+        "label": "Std Dev of Scores",
+        "color": "m",
+        "log_scale": False,
+    },
+    "neighbourhood": {
+        "title": "Active Neighbourhood",
+        "label": "Neighbourhood (k)",
+        "color": "c",
+        "log_scale": False,
+    },
+}
+
+
+class ExtraMetricChart(pg.PlotWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setBackground('w')
-        self.setTitle("Temperature", color='k')
-        self.setLabel('left', 'Temperature', color='k')
-        self.setLabel('bottom', 'Iteration', color='k')
         self.showGrid(x=True, y=True, alpha=0.3)
-        self.setLogMode(y=True)
+        self.setLabel('bottom', 'Iteration', color='k')
 
-        self._temp_curve = self.plot(pen=pg.mkPen('r', width=2), name='Temperature')
-
+        self._curve = self.plot(pen=pg.mkPen('r', width=2))
         self._iterations: list[int] = []
-        self._temperatures: list[float] = []
+        self._values: list[float] = []
+        self._current_metric: str | None = None
+        self.hide()
 
-    def add_point(self, iteration: int, temperature: float) -> None:
+    def configure_metric(self, metric_name: str) -> None:
+        if metric_name == self._current_metric:
+            return
+        self._current_metric = metric_name
+        config = METRIC_CONFIG.get(metric_name, {})
+        title = str(config.get("title", metric_name))
+        label = str(config.get("label", metric_name))
+        color = str(config.get("color", "r"))
+        log_scale = bool(config.get("log_scale", False))
+
+        self.setTitle(title, color='k')
+        self.setLabel('left', label, color='k')
+        self.setLogMode(y=log_scale)
+        self._curve.setPen(pg.mkPen(color, width=2))
+        self.show()
+
+    def add_point(self, iteration: int, value: float) -> None:
         self._iterations.append(iteration)
-        self._temperatures.append(max(temperature, 1e-10))
-        self._temp_curve.setData(self._iterations, self._temperatures)
+        self._values.append(max(value, 1e-10))
+        self._curve.setData(self._iterations, self._values)
 
     def clear_data(self) -> None:
         self._iterations.clear()
-        self._temperatures.clear()
-        self._temp_curve.setData([], [])
+        self._values.clear()
+        self._curve.setData([], [])
+        self._current_metric = None
+        self.hide()
 
 
 class StatsPanel(QWidget):
@@ -76,12 +114,14 @@ class StatsPanel(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
 
         self._labels: dict[str, QLabel] = {}
+        self._label_names: dict[str, QLabel] = {}
 
         stats = [
             ("iteration", "Iteration:"),
+            ("elapsed", "Elapsed:"),
             ("current_score", "Current Score:"),
             ("best_score", "Best Score:"),
-            ("temperature", "Temperature:"),
+            ("extra_metric", "Extra:"),
             ("improvement", "Improvement:"),
         ]
 
@@ -91,6 +131,7 @@ class StatsPanel(QWidget):
             value = QLabel("-")
             value.setAlignment(Qt.AlignmentFlag.AlignRight)
             self._labels[key] = value
+            self._label_names[key] = label
             layout.addWidget(label, row, 0)
             layout.addWidget(value, row, 1)
 
@@ -98,13 +139,22 @@ class StatsPanel(QWidget):
 
     def update_stats(self, data: ProgressData, initial_score: float | None = None) -> None:
         self._labels["iteration"].setText(f"{data.iteration:,}")
+
+        mins, secs = divmod(int(data.elapsed_seconds), 60)
+        self._labels["elapsed"].setText(f"{mins}m {secs:02d}s")
+
         self._labels["current_score"].setText(f"{data.current_score:,.2f}")
         self._labels["best_score"].setText(f"{data.best_score:,.2f}")
 
-        if "temperature" in data.extra:
-            self._labels["temperature"].setText(f"{data.extra['temperature']:.4f}")
+        if data.extra:
+            metric_name = next(iter(data.extra))
+            config = METRIC_CONFIG.get(metric_name, {})
+            display_name = str(config.get("title", metric_name))
+            self._label_names["extra_metric"].setText(f"{display_name}:")
+            self._labels["extra_metric"].setText(f"{data.extra[metric_name]:,.4f}")
         else:
-            self._labels["temperature"].setText("-")
+            self._label_names["extra_metric"].setText("Extra:")
+            self._labels["extra_metric"].setText("-")
 
         if initial_score is not None:
             improvement = initial_score - data.best_score
@@ -139,9 +189,9 @@ class VisualizationPanel(QWidget):
         self._score_chart.setMinimumHeight(200)
         layout.addWidget(self._score_chart, stretch=2)
 
-        self._temp_chart = TemperatureChart()
-        self._temp_chart.setMinimumHeight(150)
-        layout.addWidget(self._temp_chart, stretch=1)
+        self._extra_chart = ExtraMetricChart()
+        self._extra_chart.setMinimumHeight(150)
+        layout.addWidget(self._extra_chart, stretch=1)
 
     def set_initial_score(self, score: float) -> None:
         self._initial_score = score
@@ -149,13 +199,15 @@ class VisualizationPanel(QWidget):
     def update_progress(self, data: ProgressData) -> None:
         self._score_chart.add_point(data.iteration, data.current_score, data.best_score)
 
-        if "temperature" in data.extra:
-            self._temp_chart.add_point(data.iteration, data.extra["temperature"])
+        if data.extra:
+            metric_name = next(iter(data.extra))
+            self._extra_chart.configure_metric(metric_name)
+            self._extra_chart.add_point(data.iteration, data.extra[metric_name])
 
         self._stats_panel.update_stats(data, self._initial_score)
 
     def clear(self) -> None:
         self._score_chart.clear_data()
-        self._temp_chart.clear_data()
+        self._extra_chart.clear_data()
         self._stats_panel.clear_stats()
         self._initial_score = None
