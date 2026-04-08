@@ -1,0 +1,10 @@
+algorithm,,max_iterations,calibration_samples,target_acceptance,population_size,mutation_rate,max_generations,local_search_max_iter,used_neigbourhoods,initial_score,final_score,improvement_abs,improvement_pct,,total_runtime_s
+Simulated Annealing,,1000000,1000,0.15,,,,,,10641498.4,283731.26,10357767.14,97.3337283,,9
+Simulated Annealing,,2000000,2000,0.25,,,,,,10641498.4,210454.32,10431044.08,98.02232438,,22
+Simulated Annealing,,3000000,3000,0.35,,,,,,10641498.4,244355.4,10397143,97.70375007,,31
+Variable Neighbourhood Search,,100,,,,,,30000,2,10641498.4,519700.66,10121797.74,95.11628306,,118
+Variable Neighbourhood Search,,200,,,,,,50000,3,10641498.4,492944,10148554.4,95.36772002,,220
+Variable Neighbourhood Search,,300,,,,,,80000,4,10641498.4,533905.13,10107593.27,94.9828012,,344
+Genetic,,,,,80,0.01,300,,,10641498.4,10617894.71,23603.69313,0.221807985,,345
+Genetic,,,,,150,0.03,300,,,10641498.4,10592572,48926.40313,0.459769868,,597
+Genetic,,,,,250,0.07,300,,,10641498.4,10591473.85,50024.55314,0.470089373,,949
