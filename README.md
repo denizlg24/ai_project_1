@@ -9,8 +9,8 @@ minimizing a combined preference cost and accounting penalty while respecting da
 ├── input/             # Input data (family_data.csv)
 ├── output/            # Generated submissions
 └── src/
-    ├── main.py        # Entry point — greedy optimizer
-    └── data_loader.py # CSV loading and data processing
+    ├── app.py         # Entry point    
+    └── ...
 ```
 
 ## Requirements
@@ -29,8 +29,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```bash
 cd src
 uv sync
-uv run main.py
+uv run app.py
 ```
 
 `uv sync` installs dependencies (`numpy`, `pandas`) from `pyproject.toml`.
-The optimizer reads from `input/family_data.csv`, improves on the best existing submission in `output/`, and writes a new one if the score improves.
