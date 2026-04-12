@@ -1,3 +1,5 @@
+import os
+import re
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QSplitter, QMessageBox, QStatusBar
 )
@@ -138,8 +140,13 @@ class MainWindow(QMainWindow):
         self._config_panel.set_running(False)
         self._status_bar.showMessage(f"Finished. Best score: {score:,.2f}")
         if self._problem:
-            algo_name = self._algorithm.name().replace(" ", "_")
-            output_path = f"../output/output_{algo_name}_{int(score)}.csv"
+            # Sanitize algorithm name for filename
+            algo_name = self._algorithm.name()
+            algo_name = re.sub(r'[^a-zA-Z0-9_\-\u00C0-\u00FF]', '_', algo_name)
+            
+            output_dir = "../output"
+            os.makedirs(output_dir, exist_ok=True)
+            output_path = f"{output_dir}/output_{algo_name}_{int(score)}.csv"
 
             try:
                 self._problem.to_submission(output_path)
